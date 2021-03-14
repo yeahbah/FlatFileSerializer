@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{9DF57EA1-D10E-45DF-A547-E8A8D172E2FD}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="..\..\..\OneDrive\Documents\Embarcadero\Studio\Projects\FlatFileSerializer.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Test\FlatFileSerializerTests.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="FlatFileSerializer">
+        <MSBuild Projects="..\..\..\OneDrive\Documents\Embarcadero\Studio\Projects\FlatFileSerializer.dproj"/>
+    </Target>
+    <Target Name="FlatFileSerializer:Clean">
+        <MSBuild Projects="..\..\..\OneDrive\Documents\Embarcadero\Studio\Projects\FlatFileSerializer.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FlatFileSerializer:Make">
+        <MSBuild Projects="..\..\..\OneDrive\Documents\Embarcadero\Studio\Projects\FlatFileSerializer.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FlatFileSerializerTests">
+        <MSBuild Projects="Test\FlatFileSerializerTests.dproj"/>
+    </Target>
+    <Target Name="FlatFileSerializerTests:Clean">
+        <MSBuild Projects="Test\FlatFileSerializerTests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FlatFileSerializerTests:Make">
+        <MSBuild Projects="Test\FlatFileSerializerTests.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="FlatFileSerializer;FlatFileSerializerTests"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="FlatFileSerializer:Clean;FlatFileSerializerTests:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="FlatFileSerializer:Make;FlatFileSerializerTests:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
