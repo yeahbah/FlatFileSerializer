@@ -33,6 +33,8 @@ requires
 
 contains
   uFlatFileModel in 'uFlatFileModel.pas',
-  uFlatFileAttributes in 'uFlatFileAttributes.pas';
+  uFlatFileAttributes in 'uFlatFileAttributes.pas',
+  uFlatFileSerializer in 'uFlatFileSerializer.pas',
+  uFlatFileDocument in 'uFlatFileDocument.pas';
 
 end.

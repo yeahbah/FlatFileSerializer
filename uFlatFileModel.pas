@@ -21,7 +21,6 @@ type
   TFlatFileModelBase = class abstract
   strict private
     function GetProperties: TArray<TFlatFileModelPropertyRecord>;
-  private
     function GetTotalSize: integer;
   public
     function ToString: string; override;

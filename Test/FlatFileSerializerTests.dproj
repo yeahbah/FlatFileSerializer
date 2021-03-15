@@ -69,7 +69,6 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>(None)</Manifest_File>
         <DCC_UsePackage>Spring.Data;$(DCC_UsePackage)</DCC_UsePackage>
-        <DCC_Define>TESTINSIGHT;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -86,6 +85,9 @@
         <DCCReference Include="..\uFlatFileModel.pas"/>
         <DCCReference Include="uTestFlatFileModel.pas"/>
         <DCCReference Include="..\..\spring4d\Source\Base\Collections\Spring.Collections.pas"/>
+        <DCCReference Include="uTestFlatFileSerializer.pas"/>
+        <DCCReference Include="..\uFlatFileDocument.pas"/>
+        <DCCReference Include="..\uFlatFileSerializer.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

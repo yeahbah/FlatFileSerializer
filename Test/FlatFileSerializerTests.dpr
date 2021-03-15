@@ -15,7 +15,10 @@ uses
   uFlatFileAttributes in '..\uFlatFileAttributes.pas',
   uFlatFileModel in '..\uFlatFileModel.pas',
   uTestFlatFileModel in 'uTestFlatFileModel.pas',
-  Spring.Collections in '..\..\spring4d\Source\Base\Collections\Spring.Collections.pas';
+  Spring.Collections in '..\..\spring4d\Source\Base\Collections\Spring.Collections.pas',
+  uTestFlatFileSerializer in 'uTestFlatFileSerializer.pas',
+  uFlatFileDocument in '..\uFlatFileDocument.pas',
+  uFlatFileSerializer in '..\uFlatFileSerializer.pas';
 
 var
   runner : ITestRunner;

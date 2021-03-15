@@ -22,6 +22,18 @@ type
     property AlignRight: boolean read fAlignRight write fAlignRight;
   end;
 
+  TFlatFileRecordAttribute = class(TCustomAttribute)
+  private
+    fOrder: integer;
+  public
+    property Order: integer read fOrder write fOrder;
+    constructor Create(aOrder: integer);
+  end;
+
+  TFlatFileRecordListAttribute = class(TFlatFileRecordAttribute)
+
+  end;
+
 implementation
 
 { TFlatFileItemAttribute }
@@ -48,6 +60,13 @@ begin
     exit('0');
 
   exit(' ');
+end;
+
+{ TFlatFileRecordAttribute }
+
+constructor TFlatFileRecordAttribute.Create(aOrder: integer);
+begin
+  fOrder := aOrder;
 end;
 
 end.

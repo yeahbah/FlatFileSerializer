@@ -3,9 +3,30 @@ unit uTestModel;
 interface
 
 uses
-  uFlatFileAttributes, uFlatFileModel;
+  uFlatFileAttributes, uFlatFileModel, uFlatFileDocument, Spring.Collections;
 
 type
+  TTransmitterModel = class;
+  T1099DocumentModel = class;
+  TPayerModel = class;
+  TPayeeModel = class;
+
+  T1099DocumentModel = class(TFlatFileDocumentBase)
+  private
+    fTransmitter: TTransmitterModel;
+    fPayer: TPayerModel;
+    fPayeeList: IList<TPayeeModel>;
+  public
+    [FlatFileRecord(1)]
+    property Transmitter: TTransmitterModel read fTransmitter write fTransmitter;
+
+    [FlatFileRecord(2)]
+    property Payer: TPayerModel read fPayer write fPayer;
+
+    [FlatFileRecordList(3)]
+    property PayeeList: IList<TPayeeModel> read fPayeeList write fPayeeList;
+  end;
+
   TTransmitterModel = class(TFlatFileModelBase)
   private
     fRecordType: string;
@@ -159,6 +180,14 @@ type
 //    function ToString: string; override;
   end;
 
+  TPayerModel = class(TFlatFileModelBase)
+
+  end;
+
+  TPayeeModel = class(TFlatFileModelBase)
+
+  end;
+
 implementation
 
 uses
@@ -212,5 +241,7 @@ uses
 //    s.Free;
 //  end;
 //end;
+
+{ T1099DocumentModel }
 
 end.
