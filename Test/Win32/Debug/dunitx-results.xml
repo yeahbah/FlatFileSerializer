@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<test-results name="C:\Users\yeahb\Projects\Delphi\FlatFileSerializer\Test\Win32\Debug\FlatFileSerializerTests.exe" total="1" errors="0" failures="1" ignored="0" inconclusive="0" not-run="0" skipped="0" invalid="0" date="2021-03-14" time="0.015">
+  <culture-info current-culture="en" current-uiculture="en" />
+  <test-suite type="Assembly" name="FlatFileSerializerTests.exe" executed="true" result="Failure" success="False" time="0.015" asserts="0">
+    <results>
+        <test-suite type="Namespace" name="uTestFlatFileModel" executed="true" result="Failure" success="False" time="0.014" asserts="0" >
+          <results>
+              <test-suite type="Fixture" name="TFlatFileModelTest" executed="True" result="Failure" success="False" time="0.014" >
+                <results>
+                  <test-case name="TestToString" executed="True" result="Failure" success="False" time="0.013" asserts="0" >
+                    <failure>
+                      <message>
+                        <![CDATA[ Expected 4458998 but got 61  ]]>
+                      </message>
+                      <stack-trace>
+                        <![CDATA[  ]]>
+                      </stack-trace>
+                    </failure>
+                  </test-case>
+                </results>
+              </test-suite>
+          </results>
+        </test-suite>
+    </results>
+  </test-suite>
+</test-results>

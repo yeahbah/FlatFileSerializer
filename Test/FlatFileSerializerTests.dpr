@@ -11,10 +11,11 @@ uses
   DUnitX.Loggers.Console,
   DUnitX.Loggers.Xml.NUnit,
   DUnitX.TestFramework,
-  Unit1 in 'Unit1.pas',
   uTestModel in 'uTestModel.pas',
   uFlatFileAttributes in '..\uFlatFileAttributes.pas',
-  uFlatFileModel in '..\uFlatFileModel.pas';
+  uFlatFileModel in '..\uFlatFileModel.pas',
+  uTestFlatFileModel in 'uTestFlatFileModel.pas',
+  Spring.Collections in '..\..\spring4d\Source\Base\Collections\Spring.Collections.pas';
 
 var
   runner : ITestRunner;

@@ -28,11 +28,11 @@ package FlatFileSerializer;
 {$IMPLICITBUILD ON}
 
 requires
-  rtl;
+  rtl,
+  Spring.Data;
 
 contains
-  uFlatFileAttributes in '..\..\..\OneDrive\Documents\Embarcadero\Studio\Projects\uFlatFileAttributes.pas',
-  uFlatFileRecordSerializer in 'uFlatFileRecordSerializer.pas',
-  uFlatFileModel in 'uFlatFileModel.pas';
+  uFlatFileModel in 'uFlatFileModel.pas',
+  uFlatFileAttributes in 'uFlatFileAttributes.pas';
 
 end.

@@ -77,9 +77,9 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="..\..\..\OneDrive\Documents\Embarcadero\Studio\Projects\uFlatFileAttributes.pas"/>
-        <DCCReference Include="uFlatFileRecordSerializer.pas"/>
+        <DCCReference Include="Spring.Data.dcp"/>
         <DCCReference Include="uFlatFileModel.pas"/>
+        <DCCReference Include="uFlatFileAttributes.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -102,7 +102,7 @@
                 </Source>
             </Delphi.Personality>
             <Deployment Version="3">
-                <DeployFile LocalName="..\..\..\..\..\..\Public\Documents\Embarcadero\Studio\20.0\Bpl\FlatFileSerializer.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\..\..\Public\Documents\Embarcadero\Studio\20.0\Bpl\FlatFileSerializer.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>FlatFileSerializer.bpl</RemoteName>
                         <Overwrite>true</Overwrite>

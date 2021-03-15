@@ -3,11 +3,11 @@
         <ProjectGuid>{9DF57EA1-D10E-45DF-A547-E8A8D172E2FD}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="..\..\..\OneDrive\Documents\Embarcadero\Studio\Projects\FlatFileSerializer.dproj">
+        <Projects Include="FlatFileSerializer.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="Test\FlatFileSerializerTests.dproj">
-            <Dependencies/>
+            <Dependencies>FlatFileSerializer.dproj</Dependencies>
         </Projects>
     </ItemGroup>
     <ProjectExtensions>
@@ -18,21 +18,21 @@
         </BorlandProject>
     </ProjectExtensions>
     <Target Name="FlatFileSerializer">
-        <MSBuild Projects="..\..\..\OneDrive\Documents\Embarcadero\Studio\Projects\FlatFileSerializer.dproj"/>
+        <MSBuild Projects="FlatFileSerializer.dproj"/>
     </Target>
     <Target Name="FlatFileSerializer:Clean">
-        <MSBuild Projects="..\..\..\OneDrive\Documents\Embarcadero\Studio\Projects\FlatFileSerializer.dproj" Targets="Clean"/>
+        <MSBuild Projects="FlatFileSerializer.dproj" Targets="Clean"/>
     </Target>
     <Target Name="FlatFileSerializer:Make">
-        <MSBuild Projects="..\..\..\OneDrive\Documents\Embarcadero\Studio\Projects\FlatFileSerializer.dproj" Targets="Make"/>
+        <MSBuild Projects="FlatFileSerializer.dproj" Targets="Make"/>
     </Target>
-    <Target Name="FlatFileSerializerTests">
+    <Target Name="FlatFileSerializerTests" DependsOnTargets="FlatFileSerializer">
         <MSBuild Projects="Test\FlatFileSerializerTests.dproj"/>
     </Target>
-    <Target Name="FlatFileSerializerTests:Clean">
+    <Target Name="FlatFileSerializerTests:Clean" DependsOnTargets="FlatFileSerializer:Clean">
         <MSBuild Projects="Test\FlatFileSerializerTests.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="FlatFileSerializerTests:Make">
+    <Target Name="FlatFileSerializerTests:Make" DependsOnTargets="FlatFileSerializer:Make">
         <MSBuild Projects="Test\FlatFileSerializerTests.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">

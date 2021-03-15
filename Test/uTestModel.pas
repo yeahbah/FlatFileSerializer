@@ -6,7 +6,7 @@ uses
   uFlatFileAttributes, uFlatFileModel;
 
 type
-  TTransmitterModel = class(TFlatFileModel)
+  TTransmitterModel = class(TFlatFileModelBase)
   private
     fRecordType: string;
     fPaymentYear: string;

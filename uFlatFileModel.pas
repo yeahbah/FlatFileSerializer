@@ -3,22 +3,24 @@ unit uFlatFileModel;
 interface
 
 uses
-  Rtti, Spring.Collections, uFlatFileAttributes;
+  Rtti, Spring.Collections, uFlatFileAttributes, Generics.Collections;
 
 type
   TFlatFileModelPropertyRecord = record
-    Position: integer;
-    Size: integer;
-    FillChar: char;
     Value: TValue;
-    constructor Create(aPosition: integer; aSize: integer; aFillChar: char; aValue: TValue);
+    FlatFileItemAttribute: TFlatFileItemAttribute;
+    constructor Create(aValue: TValue; aFlatFileItemAttribute: TFlatFileItemAttribute);
   end;
 
-  TFlatFileModel = class abstract
+  TFlatFileModelBase = class abstract
   strict private
-    function GetProperties: IList<TFlatFileModelPropertyRecord>;
+    function GetProperties: TArray<TFlatFileModelPropertyRecord>;
+  private
+    function GetTotalSize: integer;
   public
     function ToString: string; override;
+    procedure SetFromString(aValue: string); virtual;
+    property TotalSize: integer read GetTotalSize;
   end;
 
 implementation
@@ -27,9 +29,9 @@ uses
   System.Generics.Defaults, SysUtils;
 
 
-{ TFlatFileModel }
+{ TFlatFileModelBase }
 
-function TFlatFileModel.GetProperties: IList<TFlatFileModelPropertyRecord>;
+function TFlatFileModelBase.GetProperties: TArray<TFlatFileModelPropertyRecord>;
 var
   ctx: TRttiContext;
   t: TRttiType;
@@ -56,36 +58,66 @@ begin
       continue;
 
     propertyList.Add(TFlatFileModelPropertyRecord
-      .Create(flatFileItemAttribute.Position,
-              flatFileItemAttribute.Size,
-              flatFileItemAttribute.FillChar,
-              prop.GetValue(self)));
+      .Create(prop.GetValue(self), flatFileItemAttribute));
 
+    attrList.Clear;
   end;
 
-  Result := propertyList;
+  Result := propertyList.ToArray;
 end;
 
-function TFlatFileModel.ToString: string;
+function TFlatFileModelBase.GetTotalSize: integer;
+begin
+
+end;
+
+procedure TFlatFileModelBase.SetFromString(aValue: string);
+begin
+
+end;
+
+function TFlatFileModelBase.ToString: string;
 var
-  propertyList: IList<TFlatFileModelPropertyRecord>;
+  propertyList: TArray<TFlatFileModelPropertyRecord>;
   prop: TFlatFileModelPropertyRecord;
   s: TStringBuilder;
+  propValue: string;
 begin
   propertyList := GetProperties;
-  propertyList.Sort(
+  TArray.Sort<TFlatFileModelPropertyRecord>(propertyList,
     TDelegatedComparer<TFlatFileModelPropertyRecord>.Create(
       function (const left, right: TFlatFileModelPropertyRecord): integer
       begin
-        result := left.Position - right.Position;
+        result := left.FlatFileItemAttribute.Position - right.FlatFileItemAttribute.Position;
       end));
 
   s := TStringBuilder.Create;
   try
     for prop in propertyList do
     begin
-      // TODO: type convertion
-      s.Append(prop.Value.ToString);
+      case prop.Value.Kind of
+        tkFloat:
+          begin
+            if prop.Value.TypeInfo = System.TypeInfo(TDate) then
+              propValue := FormatDateTime('yyyyMMdd', prop.Value.AsType<TDate>())
+            else if prop.Value.TypeInfo = System.TypeInfo(TDateTime) then
+              propValue := FormatDateTime('yyyyMMddHHmmss', prop.Value.AsType<TDateTime>())
+            else
+            begin
+              propValue := FormatFloat('#.00', prop.Value.AsExtended);
+              propValue := propValue.Replace('.', '');
+            end;
+          end
+        else
+          propValue := prop.Value.ToString().Trim();
+      end;
+
+      if prop.FlatFileItemAttribute.AlignRight then
+        propValue := propValue.PadLeft(prop.FlatFileItemAttribute.Size, prop.FlatFileItemAttribute.FillChar)
+      else
+        propValue := propValue.PadRight(prop.FlatFileItemAttribute.Size, prop.FlatFileItemAttribute.FillChar);
+
+      s.Append(propValue);
     end;
     result := s.ToString;
   finally
@@ -95,13 +127,11 @@ end;
 
 { TFlatFileModelProperty }
 
-constructor TFlatFileModelPropertyRecord.Create(aPosition, aSize: integer;
-  aFillChar: char; aValue: TValue);
+constructor TFlatFileModelPropertyRecord.Create(aValue: TValue;
+  aFlatFileItemAttribute: TFlatFileItemAttribute);
 begin
-  Position := aPosition;
-  Size := aSize;
-  FillChar := aFillChar;
   Value := aValue;
+  FlatFileItemAttribute := aFlatFileItemAttribute;
 end;
 
 end.
