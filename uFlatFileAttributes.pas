@@ -3,19 +3,22 @@ unit uFlatFileAttributes;
 interface
 
 type
+  TSpaceFill = (sfZero, sfSpace);
 
   TFlatFileItemAttribute = class(TCustomAttribute)
   private
-    fPosition: integer;
+    fOrder: integer;
     fSize: integer;
-    fFillChar: char;
+    fSpaceFill: TSpaceFill;
     fAlignRight: boolean;
+    function GetSpaceFillChar: char;
   public
     constructor Create(aPosition, aSize: integer); overload;
-    constructor Create(aPosition: integer; aSize: integer; aFillChar: char; aAlignRight: boolean = false); overload;
-    property Position: integer read fPosition write fPosition;
+    constructor Create(aPosition: integer; aSize: integer; aSpaceFill: TSpaceFill; aAlignRight: boolean = false); overload;
+    property Order: integer read fOrder write fOrder;
     property Size: integer read fSize write fSize;
-    property FillChar: char read fFillChar write fFillChar;
+    property SpaceFill: TSpaceFill read fSpaceFill write fSpaceFill;
+    property SpaceFillChar: char read GetSpaceFillChar;
     property AlignRight: boolean read fAlignRight write fAlignRight;
   end;
 
@@ -25,18 +28,26 @@ implementation
 
 constructor TFlatFileItemAttribute.Create(aPosition, aSize: integer);
 begin
-  fPosition := aPosition;
+  fOrder := aPosition;
   fSize := aSize;
-  fFillChar := ' ';
+  fSpaceFill := TSpaceFill.sfSpace;
   fAlignRight := false;
 end;
 
-constructor TFlatFileItemAttribute.Create(aPosition, aSize: integer; aFillChar: char;
+constructor TFlatFileItemAttribute.Create(aPosition, aSize: integer; aSpaceFill: TSpaceFill;
   aAlignRight: boolean);
 begin
   Create(aPosition, aSize);
-  fFillChar := aFillChar;
+  fSpaceFill := aSpaceFill;
   fAlignRight := aAlignRight;
+end;
+
+function TFlatFileItemAttribute.GetSpaceFillChar: char;
+begin
+  if fSpaceFill = TSpaceFill.sfZero then
+    exit('0');
+
+  exit(' ');
 end;
 
 end.

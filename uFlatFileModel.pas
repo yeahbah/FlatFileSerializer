@@ -7,9 +7,15 @@ uses
 
 type
   TFlatFileModelPropertyRecord = record
-    Value: TValue;
+  private
+    function GetValue: TValue;
+  public
+    ObjectInstance: Pointer;
+    ObjectProperty: TRttiProperty;
     FlatFileItemAttribute: TFlatFileItemAttribute;
-    constructor Create(aValue: TValue; aFlatFileItemAttribute: TFlatFileItemAttribute);
+    constructor Create(aObjectInstance: Pointer;
+      aObjectProperty: TRttiProperty; aFlatFileItemAttribute: TFlatFileItemAttribute);
+    property Value: TValue read GetValue;
   end;
 
   TFlatFileModelBase = class abstract
@@ -58,22 +64,81 @@ begin
       continue;
 
     propertyList.Add(TFlatFileModelPropertyRecord
-      .Create(prop.GetValue(self), flatFileItemAttribute));
+      .Create(self, prop, flatFileItemAttribute));
 
     attrList.Clear;
   end;
 
-  Result := propertyList.ToArray;
+  // return the list of properties sorted by position
+  result := propertyList.ToArray;
+  TArray.Sort<TFlatFileModelPropertyRecord>(result,
+    TDelegatedComparer<TFlatFileModelPropertyRecord>.Create(
+      function (const left, right: TFlatFileModelPropertyRecord): integer
+      begin
+        result := left.FlatFileItemAttribute.Order - right.FlatFileItemAttribute.Order;
+      end));
+
 end;
 
 function TFlatFileModelBase.GetTotalSize: integer;
+var
+  properties: TArray<TFlatFileModelPropertyRecord>;
+  prop: TFlatFileModelPropertyRecord;
 begin
-
+  result := 0;
+  properties := GetProperties();
+  for prop in properties do
+  begin
+    result := result + prop.FlatFileItemAttribute.Size;
+  end;
 end;
 
 procedure TFlatFileModelBase.SetFromString(aValue: string);
+var
+  properties: TArray<TFlatFileModelPropertyRecord>;
+  prop: TFlatFileModelPropertyRecord;
+  value: string;
+  currentIndex, temp: integer;
+  year, month, day: word;
 begin
+  properties := GetProperties();
 
+  currentIndex := 0;
+  for prop in properties do
+  begin
+    value := aValue
+      .Substring(currentIndex, prop.FlatFileItemAttribute.Size)
+      .Trim();
+
+    case prop.Value.Kind of
+      tkFloat:
+        begin
+          if prop.Value.TypeInfo = System.TypeInfo(TDate) then
+          begin
+            year := StrToInt(value.Substring(0, 4));
+            month := StrToInt(value.Substring(4, 2));
+            day := StrToInt(value.Substring(6, 2));
+            prop.ObjectProperty.SetValue(prop.ObjectInstance, EncodeDate(year, month, day));
+          end
+          else
+          begin
+            value := value.Insert(prop.FlatFileItemAttribute.Size -2, '.');
+            prop.ObjectProperty.SetValue(prop.ObjectInstance, StrToFloat(value));
+          end;
+        end;
+
+      tkInteger:
+        begin
+          temp := integer.Parse(value);
+          prop.ObjectProperty.SetValue(prop.ObjectInstance, temp);
+        end;
+
+      tkString, tkUString:
+        prop.ObjectProperty.SetValue(prop.ObjectInstance, value);
+
+    end;
+    currentIndex := currentIndex + prop.FlatFileItemAttribute.Size;
+  end;
 end;
 
 function TFlatFileModelBase.ToString: string;
@@ -84,12 +149,6 @@ var
   propValue: string;
 begin
   propertyList := GetProperties;
-  TArray.Sort<TFlatFileModelPropertyRecord>(propertyList,
-    TDelegatedComparer<TFlatFileModelPropertyRecord>.Create(
-      function (const left, right: TFlatFileModelPropertyRecord): integer
-      begin
-        result := left.FlatFileItemAttribute.Position - right.FlatFileItemAttribute.Position;
-      end));
 
   s := TStringBuilder.Create;
   try
@@ -113,9 +172,9 @@ begin
       end;
 
       if prop.FlatFileItemAttribute.AlignRight then
-        propValue := propValue.PadLeft(prop.FlatFileItemAttribute.Size, prop.FlatFileItemAttribute.FillChar)
+        propValue := propValue.PadLeft(prop.FlatFileItemAttribute.Size, prop.FlatFileItemAttribute.SpaceFillChar)
       else
-        propValue := propValue.PadRight(prop.FlatFileItemAttribute.Size, prop.FlatFileItemAttribute.FillChar);
+        propValue := propValue.PadRight(prop.FlatFileItemAttribute.Size, prop.FlatFileItemAttribute.SpaceFillChar);
 
       s.Append(propValue);
     end;
@@ -127,11 +186,17 @@ end;
 
 { TFlatFileModelProperty }
 
-constructor TFlatFileModelPropertyRecord.Create(aValue: TValue;
-  aFlatFileItemAttribute: TFlatFileItemAttribute);
+constructor TFlatFileModelPropertyRecord.Create(aObjectInstance: Pointer;
+  aObjectProperty: TRttiProperty; aFlatFileItemAttribute: TFlatFileItemAttribute);
 begin
-  Value := aValue;
+  ObjectInstance := aObjectInstance;
+  ObjectProperty := aObjectProperty;
   FlatFileItemAttribute := aFlatFileItemAttribute;
+end;
+
+function TFlatFileModelPropertyRecord.GetValue: TValue;
+begin
+  result := ObjectProperty.GetValue(ObjectInstance);
 end;
 
 end.
