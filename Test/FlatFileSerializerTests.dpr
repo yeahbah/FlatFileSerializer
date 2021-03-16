@@ -18,7 +18,8 @@ uses
   Spring.Collections in '..\..\spring4d\Source\Base\Collections\Spring.Collections.pas',
   uTestFlatFileSerializer in 'uTestFlatFileSerializer.pas',
   uFlatFileDocument in '..\uFlatFileDocument.pas',
-  uFlatFileSerializer in '..\uFlatFileSerializer.pas';
+  uFlatFileSerializer in '..\uFlatFileSerializer.pas',
+  uFlatFileExceptions in '..\uFlatFileExceptions.pas';
 
 var
   runner : ITestRunner;

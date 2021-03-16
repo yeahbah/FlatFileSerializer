@@ -4,7 +4,7 @@ interface
 
 uses
   uFlatFileDocument, uFlatFileModel, Classes, Spring.Collections, Generics.Collections,
-  Rtti, uFlatFileAttributes, Generics.Defaults, SysUtils;
+  Rtti, uFlatFileAttributes, Generics.Defaults, SysUtils, uFlatFileExceptions;
 
 
 type
@@ -22,11 +22,6 @@ type
   public
     procedure Serialize(aOutputStream: TStringStream; aFlatFileDocument: T);
     procedure Deserialize(aInputStream: TStringStream; out aResult: T);
-  end;
-
-  EInvalidRecordParentClass = class(Exception)
-  public
-
   end;
 
 implementation

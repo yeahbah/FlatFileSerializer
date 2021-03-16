@@ -31,7 +31,7 @@ type
 implementation
 
 uses
-  System.Generics.Defaults, SysUtils;
+  System.Generics.Defaults, SysUtils, DateUtils, uFlatFileExceptions;
 
 
 { TFlatFileModelBase }
@@ -98,8 +98,11 @@ var
   prop: TFlatFileModelPropertyRecord;
   value: string;
   currentIndex, temp: integer;
-  year, month, day: word;
+  year, month, day, hour, min, sec: word;
 begin
+  if aValue.Length <> TotalSize then
+    raise ERecordSizeMismatch.CreateFmt('Record mismatch. Expected size of %s record string is %d', [self.ClassName, TotalSize]);
+
   properties := GetProperties();
 
   currentIndex := 0;
@@ -118,6 +121,17 @@ begin
             month := StrToInt(value.Substring(4, 2));
             day := StrToInt(value.Substring(6, 2));
             prop.ObjectProperty.SetValue(prop.ObjectInstance, EncodeDate(year, month, day));
+          end
+          else
+          if prop.Value.TypeInfo = System.TypeInfo(TDateTime) then
+          begin
+            year := StrToInt(value.Substring(0, 4));
+            month := StrToInt(value.Substring(4, 2));
+            day := StrToInt(value.Substring(6, 2));
+            hour := StrToInt(value.Substring(8, 2));
+            min := StrToInt(value.Substring(10, 2));
+            sec := StrToInt(value.Substring(12, 2));
+            prop.ObjectProperty.SetValue(prop.ObjectInstance, EncodeDateTime(year, month, day, hour, min, sec, 0));
           end
           else
           begin

@@ -5,6 +5,17 @@ interface
 type
   TSpaceFill = (sfZero, sfSpace);
 
+  ///  Required attribute for all flat file models.
+  ///  Flat file models must have property as an identifier
+  ///  Use this attribute to define it
+  TFlatFileRecordIdentifier = class(TCustomAttribute)
+  private
+    fIdentifier: string;
+  public
+    constructor Create(aIdentifier: string);
+    property Identifier: string read fIdentifier write fIdentifier;
+  end;
+
   TFlatFileItemAttribute = class(TCustomAttribute)
   private
     fOrder: integer;
@@ -67,6 +78,13 @@ end;
 constructor TFlatFileRecordAttribute.Create(aOrder: integer);
 begin
   fOrder := aOrder;
+end;
+
+{ TFlatFileRecordIdentifier }
+
+constructor TFlatFileRecordIdentifier.Create(aIdentifier: string);
+begin
+  fIdentifier := aIdentifier;
 end;
 
 end.

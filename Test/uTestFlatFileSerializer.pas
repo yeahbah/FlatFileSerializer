@@ -12,7 +12,11 @@ type
     fName: string;
     fSalary: currency;
     fBirthDate: TDate;
+    fIdentifier: string;
   public
+    [TFlatFileRecordIdentifier('P')]
+    property Identifier: string read fIdentifier write fIdentifier;
+
     [TFlatFileItem(2, 3, TSpaceFill.sfSpace, true)]
     property SomeNumber: integer read fSomeNumber write fSomeNumber;
 
@@ -38,7 +42,7 @@ type
     [TFlatFileItem(2, 15)]
     property Timestamp: TDateTime read fTimestamp write fTimestamp;
 
-    [TFlatFileItem(3, 44, TSpaceFill.sfZero)]
+    [TFlatFileItem(3, 44)]
     property Blank: string read fBlank write fBlank;
   end;
 
@@ -90,6 +94,9 @@ type
 
 implementation
 
+uses
+  DateUtils;
+
 { TFlatFileSerializerTest }
 
 procedure TFlatFileSerializerTest.Setup;
@@ -104,7 +111,7 @@ begin
   with fSimpleDocument.Header do
   begin
     SomeCode := 'X1';
-    Timestamp := Now;
+    Timestamp := EncodeDateTime(2021, 3, 15, 22, 15, 10, 0);
     Blank := '';
   end;
 
@@ -147,14 +154,34 @@ var
   serializer: TFlatFileSerializer<TSimpleDocument>;
   document: TSimpleDocument;
   stringStream: TStringStream;
-  output: string;
+  s: TStringList;
+  header: THeaderModel;
 begin
   serializer := TFlatFileSerializer<TSimpleDocument>.Create();
   try
     stringStream := TStringStream.Create;
     try
       serializer.Serialize(stringStream, fSimpleDocument);
-      output := stringStream.DataString;
+      s := TStringList.Create;
+      try
+        stringStream.Position := 0;
+        s.LoadFromStream(stringStream);
+
+        // header test
+        header := THeaderModel.Create;
+        header.SetFromString(s[0]);
+        Assert.AreEqual('X1', header.SomeCode);
+        Assert.AreEqual(EncodeDateTime(2021, 3, 15, 22, 15, 10, 0), header.Timestamp);
+        Assert.AreEqual('', header.Blank);
+
+        // control record test
+
+        // list of people test
+
+
+      finally
+        s.Free;
+      end;
     finally
       stringStream.Free;
     end;
