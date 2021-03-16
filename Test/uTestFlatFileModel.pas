@@ -21,6 +21,12 @@ type
     procedure TestReadFromString;
 
     [Test]
+    procedure TestTryToReadIncorrectString;
+
+    [Test]
+    procedure TestIdentifierIsSomewhereInTheString;
+
+    [Test]
     procedure TestRecordIdentifierException;
 
     [Test]
@@ -45,6 +51,7 @@ type
     fBirthDate: TDate;
     fIdentifier: string;
   public
+    constructor Create;
     [TFlatFileItem(1, 1, 'T')]
     property Identifier: string read fIdentifier write fIdentifier;
 
@@ -90,12 +97,47 @@ type
     property SomeNumber: integer read fSomeNumber write fSomeNumber;
   end;
 
+  TTestIdentifier = class(TFlatFileModelBase)
+  private
+    fName: string;
+    fSomeNumber: integer;
+    fIdentifier: string;
+  public
+    [TFlatFileItem(1, 40)]
+    property Name: string read fName write fName;
+
+    [TFlatFileItem(2, 3, 'T')]
+    property Identifier: string read fIdentifier write fIdentifier;
+
+    [TFlatFileItem(3, 3, TSpaceFill.sfSpace, true)]
+    property SomeNumber: integer read fSomeNumber write fSomeNumber;
+  end;
+
 procedure TFlatFileModelTest.Setup;
 begin
 end;
 
 procedure TFlatFileModelTest.TearDown;
 begin
+end;
+
+procedure TFlatFileModelTest.TestIdentifierIsSomewhereInTheString;
+var
+  testModel: TTestIdentifier;
+  str: string;
+begin
+  testModel := TTestIdentifier.Create;
+  try
+    // identifier is not the first property
+    str := 'Don Juan Facundo                        T    1';
+    testModel.SetFromString(str);
+    Assert.AreEqual('T', testModel.Identifier);
+    Assert.AreEqual('Don Juan Facundo', testModel.Name);
+    Assert.AreEqual(1, testModel.SomeNumber);
+  finally
+    testModel.Free;
+  end;
+
 end;
 
 procedure TFlatFileModelTest.TestMultipleRecordIdentifierException;
@@ -192,6 +234,34 @@ begin
   finally
     testModel.Free;
   end;
+end;
+
+procedure TFlatFileModelTest.TestTryToReadIncorrectString;
+var
+  testModel: TTestModel;
+  str: string;
+begin
+  testModel := TTestModel.Create;
+  try
+    // identifier is expected to be T should be the first char of the string
+    str := 'XDon Juan Facundo                         10002500007519951231';
+    testModel.SetFromString(str);
+    Assert.AreEqual('', testModel.Name);
+    Assert.AreEqual(0, testModel.SomeNumber);
+    Assert.IsTrue(0 = testModel.Salary);
+  finally
+    testModel.Free;
+  end;
+
+end;
+
+{ TTestModel }
+
+constructor TTestModel.Create;
+begin
+  fSalary := 0;
+  fSomeNumber := 0;
+  fName := '';
 end;
 
 initialization

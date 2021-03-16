@@ -107,14 +107,41 @@ procedure TFlatFileModelBase.SetFromString(aValue: string);
 var
   properties: IList<TFlatFileModelPropertyRecord>;
   prop: TFlatFileModelPropertyRecord;
-  value: string;
+  value, identifier: string;
   currentIndex, temp: integer;
   year, month, day, hour, min, sec: word;
+  identifierProperty: TFlatFileModelPropertyRecord;
 begin
   if aValue.Length <> TotalSize then
     raise ERecordSizeMismatch.CreateFmt('Record mismatch. Expected size of %s record string is %d', [self.ClassName, TotalSize]);
 
   properties := GetProperties();
+
+  // make sure the correct record is read thru the identifier
+  identifierProperty := properties.Single(
+    function (const x: TFlatFileModelPropertyRecord): boolean
+    begin
+      result := x.FlatFileItemAttribute.RecordIdentifier <> string.Empty;
+    end);
+
+  // normally the identifier is somewhere in the beginning of the text
+  // so this should be a quick query otherwise whoever designed the flat file should be crucified.
+  currentIndex := 0;
+  for prop in properties do
+  begin
+    if identifierProperty.FlatFileItemAttribute.Equals(prop.FlatFileItemAttribute) then
+    begin
+      identifier := aValue
+        .Substring(currentIndex, prop.FlatFileItemAttribute.Size)
+        .Trim();
+      break;
+    end;
+    currentIndex := currentIndex + prop.FlatFileItemAttribute.Size;
+  end;
+
+  // aValue is not the right text to read
+  if identifier <> identifierProperty.FlatFileItemAttribute.RecordIdentifier then
+    exit;
 
   currentIndex := 0;
   for prop in properties do
