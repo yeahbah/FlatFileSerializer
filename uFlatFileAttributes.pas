@@ -5,27 +5,20 @@ interface
 type
   TSpaceFill = (sfZero, sfSpace);
 
-  ///  Required attribute for all flat file models.
-  ///  Flat file models must have property as an identifier
-  ///  Use this attribute to define it
-  TFlatFileRecordIdentifier = class(TCustomAttribute)
-  private
-    fIdentifier: string;
-  public
-    constructor Create(aIdentifier: string);
-    property Identifier: string read fIdentifier write fIdentifier;
-  end;
-
   TFlatFileItemAttribute = class(TCustomAttribute)
   private
     fOrder: integer;
     fSize: integer;
     fSpaceFill: TSpaceFill;
     fAlignRight: boolean;
+    fRecordIdentifier: string;
     function GetSpaceFillChar: char;
   public
-    constructor Create(aPosition, aSize: integer); overload;
-    constructor Create(aPosition: integer; aSize: integer; aSpaceFill: TSpaceFill; aAlignRight: boolean = false); overload;
+    constructor Create(const aOrder, aSize: integer); overload;
+    constructor Create(const aOrder, aSize: integer; const aRecordIdentifier: string); overload;
+    constructor Create(const aOrder: integer; const aSize: integer;
+      const aSpaceFill: TSpaceFill; const aAlignRight: boolean = false); overload;
+    property RecordIdentifier: string read fRecordIdentifier write fRecordIdentifier;
     property Order: integer read fOrder write fOrder;
     property Size: integer read fSize write fSize;
     property SpaceFill: TSpaceFill read fSpaceFill write fSpaceFill;
@@ -47,22 +40,33 @@ type
 
 implementation
 
+uses
+  SysUtils;
+
 { TFlatFileItemAttribute }
 
-constructor TFlatFileItemAttribute.Create(aPosition, aSize: integer);
+constructor TFlatFileItemAttribute.Create(const aOrder, aSize: integer);
 begin
-  fOrder := aPosition;
+  fOrder := aOrder;
   fSize := aSize;
   fSpaceFill := TSpaceFill.sfSpace;
   fAlignRight := false;
+  fRecordIdentifier := string.Empty;
 end;
 
-constructor TFlatFileItemAttribute.Create(aPosition, aSize: integer; aSpaceFill: TSpaceFill;
-  aAlignRight: boolean);
+constructor TFlatFileItemAttribute.Create(const aOrder, aSize: integer; const aSpaceFill: TSpaceFill;
+  const aAlignRight: boolean);
 begin
-  Create(aPosition, aSize);
+  Create(aOrder, aSize, '');
   fSpaceFill := aSpaceFill;
   fAlignRight := aAlignRight;
+end;
+
+constructor TFlatFileItemAttribute.Create(const aOrder,
+  aSize: integer; const aRecordIdentifier: string);
+begin
+  Create(aOrder, aSize);
+  fRecordIdentifier := aRecordIdentifier;
 end;
 
 function TFlatFileItemAttribute.GetSpaceFillChar: char;
@@ -78,13 +82,6 @@ end;
 constructor TFlatFileRecordAttribute.Create(aOrder: integer);
 begin
   fOrder := aOrder;
-end;
-
-{ TFlatFileRecordIdentifier }
-
-constructor TFlatFileRecordIdentifier.Create(aIdentifier: string);
-begin
-  fIdentifier := aIdentifier;
 end;
 
 end.

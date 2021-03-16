@@ -14,13 +14,14 @@ type
     ObjectProperty: TRttiProperty;
     FlatFileItemAttribute: TFlatFileItemAttribute;
     constructor Create(aObjectInstance: Pointer;
-      aObjectProperty: TRttiProperty; aFlatFileItemAttribute: TFlatFileItemAttribute);
+      aObjectProperty: TRttiProperty; aFlatFileItemAttribute: TFlatFileItemAttribute;
+      aIsIdentifier: boolean = false);
     property Value: TValue read GetValue;
   end;
 
   TFlatFileModelBase = class abstract
   strict private
-    function GetProperties: TArray<TFlatFileModelPropertyRecord>;
+    function GetProperties: IList<TFlatFileModelPropertyRecord>;
     function GetTotalSize: integer;
   public
     function ToString: string; override;
@@ -36,14 +37,15 @@ uses
 
 { TFlatFileModelBase }
 
-function TFlatFileModelBase.GetProperties: TArray<TFlatFileModelPropertyRecord>;
+function TFlatFileModelBase.GetProperties: IList<TFlatFileModelPropertyRecord>;
 var
   ctx: TRttiContext;
   t: TRttiType;
   prop: TRttiProperty;
-  flatFileItemAttribute: TFlatFileItemAttribute;
   attrList: IList<TCustomAttribute>;
   propertyList: IList<TFlatFileModelPropertyRecord>;
+  attr: TCustomAttribute;
+  identifierCount: integer;
 begin
   ctx := TRttiContext.Create;
   t := ctx.GetType(self.ClassInfo);
@@ -52,36 +54,45 @@ begin
 
   for prop in t.GetProperties do
   begin
-    attrList.AddRange(prop.GetAttributes());
-    flatFileItemAttribute := attrList.SingleOrDefault(
-      function (const x: TCustomAttribute): boolean
+    for attr in prop.GetAttributes() do
+    begin
+      if attr is TFlatFileItemAttribute then
       begin
-        Result := x is TFlatFileItemAttribute;
-      end, nil) as TFlatFileItemAttribute;
-
-    if flatFileItemAttribute = nil then
-      continue;
-
-    propertyList.Add(TFlatFileModelPropertyRecord
-      .Create(self, prop, flatFileItemAttribute));
-
-    attrList.Clear;
+        propertyList.Add(TFlatFileModelPropertyRecord.Create(self, prop, TFlatFileItemAttribute(attr)));
+      end;
+    end;
   end;
 
+  // model must have one Identifier property
+  identifierCount := propertyList.Where(
+    function (const x: TFlatFileModelPropertyRecord): boolean
+    begin
+      result := x.FlatFileItemAttribute.RecordIdentifier.Trim() <> string.Empty;
+    end).Count;
+
+  if identifierCount = 0  then
+    raise EUndefinedRecordIdentifier.CreateFmt(
+      'No record identifier defined for class %s. Model must have one record identifier property', [self.ClassName]);
+
+  if identifierCount > 1 then
+    raise EMultipleRecordIdentifier.CreateFmt(
+      'There are multiple record identifiers for class %s. There should only be one.', [self.ClassName]);
+
   // return the list of properties sorted by position
-  result := propertyList.ToArray;
-  TArray.Sort<TFlatFileModelPropertyRecord>(result,
+  propertyList.Sort(
     TDelegatedComparer<TFlatFileModelPropertyRecord>.Create(
       function (const left, right: TFlatFileModelPropertyRecord): integer
       begin
         result := left.FlatFileItemAttribute.Order - right.FlatFileItemAttribute.Order;
       end));
 
+  result := propertyList;
+
 end;
 
 function TFlatFileModelBase.GetTotalSize: integer;
 var
-  properties: TArray<TFlatFileModelPropertyRecord>;
+  properties: IList<TFlatFileModelPropertyRecord>;
   prop: TFlatFileModelPropertyRecord;
 begin
   result := 0;
@@ -94,7 +105,7 @@ end;
 
 procedure TFlatFileModelBase.SetFromString(aValue: string);
 var
-  properties: TArray<TFlatFileModelPropertyRecord>;
+  properties: IList<TFlatFileModelPropertyRecord>;
   prop: TFlatFileModelPropertyRecord;
   value: string;
   currentIndex, temp: integer;
@@ -156,12 +167,12 @@ end;
 
 function TFlatFileModelBase.ToString: string;
 var
-  propertyList: TArray<TFlatFileModelPropertyRecord>;
+  propertyList: IList<TFlatFileModelPropertyRecord>;
   prop: TFlatFileModelPropertyRecord;
   s: TStringBuilder;
   propValue: string;
 begin
-  propertyList := GetProperties;
+  propertyList := GetProperties();
 
   s := TStringBuilder.Create;
   try
@@ -200,11 +211,16 @@ end;
 { TFlatFileModelProperty }
 
 constructor TFlatFileModelPropertyRecord.Create(aObjectInstance: Pointer;
-  aObjectProperty: TRttiProperty; aFlatFileItemAttribute: TFlatFileItemAttribute);
+  aObjectProperty: TRttiProperty; aFlatFileItemAttribute: TFlatFileItemAttribute;
+  aIsIdentifier: boolean);
 begin
   ObjectInstance := aObjectInstance;
   ObjectProperty := aObjectProperty;
   FlatFileItemAttribute := aFlatFileItemAttribute;
+
+  // make sure the record identifier is set to whatever is defined in the attribute
+  if FlatFileItemAttribute.RecordIdentifier.Trim() <> string.Empty then
+    ObjectProperty.SetValue(ObjectInstance, FlatFileItemAttribute.RecordIdentifier);
 end;
 
 function TFlatFileModelPropertyRecord.GetValue: TValue;

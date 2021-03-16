@@ -14,19 +14,19 @@ type
     fBirthDate: TDate;
     fIdentifier: string;
   public
-    [TFlatFileRecordIdentifier('P')]
+    [TFlatFileItem(1, 1, 'P')]
     property Identifier: string read fIdentifier write fIdentifier;
 
-    [TFlatFileItem(2, 3, TSpaceFill.sfSpace, true)]
-    property SomeNumber: integer read fSomeNumber write fSomeNumber;
-
-    [TFlatFileItem(1, 40)]
+    [TFlatFileItem(2, 40)]
     property Name: string read fName write fName;
 
-    [TFlatFileItem(3, 10, TSpaceFill.sfZero, true)]
+    [TFlatFileItem(3, 3, TSpaceFill.sfSpace, true)]
+    property SomeNumber: integer read fSomeNumber write fSomeNumber;
+
+    [TFlatFileItem(4, 10, TSpaceFill.sfZero, true)]
     property Salary: currency read fSalary write fSalary;
 
-    [TFlatFileItem(4, 8)]
+    [TFlatFileItem(5, 8)]
     property BirthDate: TDate read fBirthDate write fBirthDate;
   end;
 
@@ -35,14 +35,18 @@ type
     fSomeCode: string;
     fTimestamp: TDateTime;
     fBlank: string;
+    fIdentifier: string;
   public
-    [TFlatFileItem(1, 2)]
+    [TFlatFileItem(1, 1, 'H')]
+    property Identifier: string read fIdentifier write fIdentifier;
+
+    [TFlatFileItem(2, 2)]
     property SomeCode: string read fSomeCode write fSomeCode;
 
-    [TFlatFileItem(2, 15)]
+    [TFlatFileItem(3, 15)]
     property Timestamp: TDateTime read fTimestamp write fTimestamp;
 
-    [TFlatFileItem(3, 44)]
+    [TFlatFileItem(4, 44)]
     property Blank: string read fBlank write fBlank;
   end;
 
@@ -50,11 +54,15 @@ type
   private
     fTotalPeople: integer;
     fBlank: string;
+    fIdentifier: string;
   public
-    [TFlatFileItem(1, 12, TSpaceFill.sfZero, true)]
+    [TFlatFileItem(1, 1, 'C')]
+    property Identifier: string read fIdentifier write fIdentifier;
+
+    [TFlatFileItem(2, 12, TSpaceFill.sfZero, true)]
     property TotalPeople: integer read fTotalPeople write fTotalPeople;
 
-    [TFlatFileItem(2, 49)]
+    [TFlatFileItem(3, 49)]
     property Blank: string read fBlank write fBlank;
   end;
 
@@ -152,7 +160,6 @@ end;
 procedure TFlatFileSerializerTest.TestSerialize;
 var
   serializer: TFlatFileSerializer<TSimpleDocument>;
-  document: TSimpleDocument;
   stringStream: TStringStream;
   s: TStringList;
   header: THeaderModel;

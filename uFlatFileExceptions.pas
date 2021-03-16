@@ -12,6 +12,8 @@ type
 
   EUndefinedRecordIdentifier = class(Exception);
 
+  EMultipleRecordIdentifier = class(Exception);
+
 implementation
 
 end.

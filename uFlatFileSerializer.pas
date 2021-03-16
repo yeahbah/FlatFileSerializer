@@ -4,7 +4,7 @@ interface
 
 uses
   uFlatFileDocument, uFlatFileModel, Classes, Spring.Collections, Generics.Collections,
-  Rtti, uFlatFileAttributes, Generics.Defaults, SysUtils, uFlatFileExceptions;
+  Rtti, uFlatFileAttributes, Generics.Defaults, SysUtils, uFlatFileExceptions, Spring;
 
 
 type
@@ -54,6 +54,7 @@ var
   attr: TCustomAttribute;
   value: TFlatFileModelBase;
   recordList: IList<TFlatFileModelBase>;
+  recordItem: TFlatFileModelBase;
 begin
   ctx := TRttiContext.Create;
   objectType := ctx.GetType(T);
@@ -65,9 +66,12 @@ begin
     begin
       if attr is TFlatFileRecordListAttribute then
       begin
-//      extract individual models
-//        recordList := prop.GetValue(Pointer(aFlatFileDocument)).AsType<IList<TFlatFileModelBase>>();
-//        attrList.Add(TPropertyMap.Create(recordList, TFlatFileRecordListAttribute(attr), prop))
+        // expand the list
+        recordList := IList<TFlatFileModelBase>(prop.GetValue(Pointer(aFlatFileDocument)).AsPointer);
+        for recordItem in recordList do
+        begin
+          attrList.Add(TPropertyMap.Create(recordItem, TFlatFileRecordAttribute(attr), prop))
+        end;
       end
       else
       if attr is TFlatFileRecordAttribute then
@@ -107,15 +111,9 @@ begin
     if not (prop.ModelInstance is TFlatFileModelBase) then
       raise EInvalidRecordParentClass.CreateFmt('%s must be a descendant of TFlatFileModelBase', [prop.RecordProperty.ClassName]);
 
-    if prop.RecordAttribute is TFlatFileRecordListAttribute then
-    begin
-
-    end
-    else
-    begin
       value := prop.ModelInstance.ToString() + chr(13) + chr(10);
       aOutputStream.WriteString(value);
-    end;
+
   end;
 
 end;
