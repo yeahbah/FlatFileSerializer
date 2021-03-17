@@ -78,8 +78,41 @@ begin
 end;
 
 procedure TFlatFileSerializerTest.TestDeserialize;
+var
+  serializer: TFlatFileSerializer<TSimpleDocument>;
+  stringStream: TStringStream;
+  outputDocument: TSimpleDocument;
 begin
+  serializer := TFlatFileSerializer<TSimpleDocument>.Create;
+  try
+    stringStream := TStringStream.Create;
+    try
+      serializer.Serialize(stringStream, fSimpleDocument);
+      outputDocument := TSimpleDocument.Create;
+      try
+        serializer.Deserialize(stringStream, outputDocument);
+        Assert.IsNotNull(outputDocument.Header);
+        Assert.IsNotNull(outputDocument.ControlRecord);
+        with outputDocument do
+        begin
+          Assert.AreEqual('H', Header.Identifier);
+          Assert.AreEqual('X1', Header.SomeCode);
+          Assert.AreEqual(EncodeDateTime(2021, 3, 15, 22, 15, 10, 0), Header.Timestamp);
+          Assert.AreEqual('', Header.Blank);
 
+          Assert.AreEqual(3, ControlRecord.TotalPeople);
+          Assert.AreEqual('C', ControlRecord.Identifier);
+          Assert.AreEqual('', ControlRecord.Blank);
+        end;
+      finally
+        outputDocument.Free;
+      end;
+    finally
+      stringStream.Free;
+    end;
+  finally
+    serializer.Free;
+  end;
 end;
 
 procedure TFlatFileSerializerTest.TestSerialize;
