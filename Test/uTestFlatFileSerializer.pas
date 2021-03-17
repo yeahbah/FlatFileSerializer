@@ -3,84 +3,9 @@ unit uTestFlatFileSerializer;
 interface
 uses
   DUnitX.TestFramework, uFlatFileDocument, uFlatFileModel, uFlatFileSerializer,
-  uFlatFileAttributes, Spring.Collections, SysUtils, Classes;
+  uFlatFileAttributes, Spring.Collections, SysUtils, Classes, uTestModel;
 
 type
-  TPersonModel = class(TFlatFileModelBase)
-  private
-    fSomeNumber: integer;
-    fName: string;
-    fSalary: currency;
-    fBirthDate: TDate;
-    fIdentifier: string;
-  public
-    [TFlatFileItem(1, 1, 'P')]
-    property Identifier: string read fIdentifier write fIdentifier;
-
-    [TFlatFileItem(2, 40)]
-    property Name: string read fName write fName;
-
-    [TFlatFileItem(3, 3, TSpaceFill.sfSpace, true)]
-    property SomeNumber: integer read fSomeNumber write fSomeNumber;
-
-    [TFlatFileItem(4, 10, TSpaceFill.sfZero, true)]
-    property Salary: currency read fSalary write fSalary;
-
-    [TFlatFileItem(5, 8)]
-    property BirthDate: TDate read fBirthDate write fBirthDate;
-  end;
-
-  THeaderModel = class(TFlatFileModelBase)
-  private
-    fSomeCode: string;
-    fTimestamp: TDateTime;
-    fBlank: string;
-    fIdentifier: string;
-  public
-    [TFlatFileItem(1, 1, 'H')]
-    property Identifier: string read fIdentifier write fIdentifier;
-
-    [TFlatFileItem(2, 2)]
-    property SomeCode: string read fSomeCode write fSomeCode;
-
-    [TFlatFileItem(3, 15)]
-    property Timestamp: TDateTime read fTimestamp write fTimestamp;
-
-    [TFlatFileItem(4, 44)]
-    property Blank: string read fBlank write fBlank;
-  end;
-
-  TControlRecord = class(TFlatFileModelBase)
-  private
-    fTotalPeople: integer;
-    fBlank: string;
-    fIdentifier: string;
-  public
-    [TFlatFileItem(1, 1, 'C')]
-    property Identifier: string read fIdentifier write fIdentifier;
-
-    [TFlatFileItem(2, 12, TSpaceFill.sfZero, true)]
-    property TotalPeople: integer read fTotalPeople write fTotalPeople;
-
-    [TFlatFileItem(3, 49)]
-    property Blank: string read fBlank write fBlank;
-  end;
-
-  TSimpleDocument = class(TFlatFileDocumentBase)
-  private
-    fPeople: IList<TPersonModel>;
-    fHeader: THeaderModel;
-    fControlRecord: TControlRecord;
-  public
-    [TFlatFileRecord(1)]
-    property Header: THeaderModel read fHeader write fHeader;
-
-    [TFlatFileRecordList(2)]
-    property People: IList<TPersonModel> read fPeople write fPeople;
-
-    [TFlatFileRecord(3)]
-    property ControlRecord: TControlRecord read fControlRecord write fControlRecord;
-  end;
 
   [TestFixture]
   TFlatFileSerializerTest = class
@@ -163,6 +88,8 @@ var
   stringStream: TStringStream;
   s: TStringList;
   header: THeaderModel;
+  person: TPersonModel;
+  control: TControlRecord;
 begin
   serializer := TFlatFileSerializer<TSimpleDocument>.Create();
   try
@@ -177,15 +104,25 @@ begin
         // header test
         header := THeaderModel.Create;
         header.SetFromString(s[0]);
+        Assert.AreEqual('H', header.Identifier);
         Assert.AreEqual('X1', header.SomeCode);
         Assert.AreEqual(EncodeDateTime(2021, 3, 15, 22, 15, 10, 0), header.Timestamp);
         Assert.AreEqual('', header.Blank);
 
-        // control record test
-
         // list of people test
+        person := TPersonModel.Create;
+        person.SetFromString(s[1]);
+        Assert.AreEqual('P', person.Identifier);
+        Assert.AreEqual('LOYD CHRISTMAS', person.Name);
+        Assert.IsTrue(2.99 = person.Salary);
+        Assert.AreEqual(22, person.SomeNumber);
+        Assert.AreEqual(EncodeDate(1985, 12, 25), person.BirthDate);
 
-
+        // control record test
+        control := TControlRecord.Create;
+        control.SetFromString(s[s.Count-1]);
+        Assert.AreEqual('C', control.Identifier);
+        Assert.AreEqual(3, control.TotalPeople);
       finally
         s.Free;
       end;

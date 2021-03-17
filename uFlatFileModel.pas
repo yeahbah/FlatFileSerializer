@@ -117,31 +117,26 @@ begin
 
   properties := GetProperties();
 
-  // make sure the correct record is read thru the identifier
-  identifierProperty := properties.Single(
-    function (const x: TFlatFileModelPropertyRecord): boolean
-    begin
-      result := x.FlatFileItemAttribute.RecordIdentifier <> string.Empty;
-    end);
-
   // normally the identifier is somewhere in the beginning of the text
   // so this should be a quick query otherwise whoever designed the flat file should be crucified.
   currentIndex := 0;
   for prop in properties do
   begin
-    if identifierProperty.FlatFileItemAttribute.Equals(prop.FlatFileItemAttribute) then
+    if prop.FlatFileItemAttribute.RecordIdentifier <> string.Empty then
     begin
       identifier := aValue
         .Substring(currentIndex, prop.FlatFileItemAttribute.Size)
         .Trim();
+
+      // aValue is not the right text to read
+      // this is case sensitive matching
+      if string.Compare(identifier, prop.FlatFileItemAttribute.RecordIdentifier) <> 0 then
+        exit;
+
       break;
     end;
     currentIndex := currentIndex + prop.FlatFileItemAttribute.Size;
   end;
-
-  // aValue is not the right text to read
-  if identifier <> identifierProperty.FlatFileItemAttribute.RecordIdentifier then
-    exit;
 
   currentIndex := 0;
   for prop in properties do

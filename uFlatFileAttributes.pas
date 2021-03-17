@@ -34,10 +34,6 @@ type
     constructor Create(aOrder: integer);
   end;
 
-  TFlatFileRecordListAttribute = class(TFlatFileRecordAttribute)
-
-  end;
-
 implementation
 
 uses

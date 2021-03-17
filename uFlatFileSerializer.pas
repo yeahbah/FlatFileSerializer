@@ -55,6 +55,7 @@ var
   value: TFlatFileModelBase;
   recordList: IList<TFlatFileModelBase>;
   recordItem: TFlatFileModelBase;
+  obj: Pointer;
 begin
   ctx := TRttiContext.Create;
   objectType := ctx.GetType(T);
@@ -64,21 +65,24 @@ begin
   begin
     for attr in prop.GetAttributes() do
     begin
-      if attr is TFlatFileRecordListAttribute then
-      begin
-        // expand the list
-        recordList := IList<TFlatFileModelBase>(prop.GetValue(Pointer(aFlatFileDocument)).AsPointer);
-        for recordItem in recordList do
-        begin
-          attrList.Add(TPropertyMap.Create(recordItem, TFlatFileRecordAttribute(attr), prop))
-        end;
-      end
-      else
       if attr is TFlatFileRecordAttribute then
       begin
-        value := prop.GetValue(Pointer(aFlatFileDocument)).AsType<TFlatFileModelBase>();
-        attrList.Add(TPropertyMap.Create(value,
-          TFlatFileRecordAttribute(attr), prop));
+        if prop.PropertyType.QualifiedName.Contains('IList') then
+        begin
+          // expand the list
+          obj := prop.GetValue(Pointer(aFlatFileDocument)).AsPointer;
+          recordList := IList<TFlatFileModelBase>(obj);
+          for recordItem in recordList do
+          begin
+            attrList.Add(TPropertyMap.Create(recordItem, TFlatFileRecordAttribute(attr), prop))
+          end;
+        end
+        else
+        begin
+          value := prop.GetValue(Pointer(aFlatFileDocument)).AsType<TFlatFileModelBase>();
+          attrList.Add(TPropertyMap.Create(value,
+            TFlatFileRecordAttribute(attr), prop));
+        end;
       end;
 
     end;
@@ -91,7 +95,6 @@ begin
       begin
         result := left.RecordAttribute.Order - right.RecordAttribute.Order;
       end));
-
 
 end;
 
