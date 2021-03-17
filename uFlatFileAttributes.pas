@@ -2,6 +2,9 @@ unit uFlatFileAttributes;
 
 interface
 
+uses
+  uFlatFileModel;
+
 type
   TSpaceFill = (sfZero, sfSpace);
 
@@ -32,6 +35,9 @@ type
   public
     property Order: integer read fOrder write fOrder;
     constructor Create(aOrder: integer);
+  end;
+
+  TFlatFileRecordListAttribute = class(TFlatFileRecordAttribute)
   end;
 
 implementation

@@ -75,11 +75,13 @@ type
     [TFlatFileRecord(1)]
     property Header: THeaderModel read fHeader write fHeader;
 
-    [TFlatFileRecord(2)]
+    [TFlatFileRecordListAttribute(2)]
     property People: IList<TPersonModel> read fPeople write fPeople;
 
     [TFlatFileRecord(3)]
     property ControlRecord: TControlRecord read fControlRecord write fControlRecord;
+
+    procedure CreateLists; override;
   end;
 
 
@@ -101,8 +103,10 @@ type
     [TFlatFileRecord(2)]
     property Payer: TPayerModel read fPayer write fPayer;
 
-    [TFlatFileRecordList(3)]
+    [TFlatFileRecord(3)]
     property PayeeList: IList<TPayeeModel> read fPayeeList write fPayeeList;
+
+    procedure CreateLists; override;
   end;
 
   TTransmitterModel = class(TFlatFileModelBase)
@@ -271,55 +275,17 @@ implementation
 uses
   SysUtils;
 
-{ TTransmitterModel }
+procedure T1099DocumentModel.CreateLists;
+begin
+  PayeeList := TCollections.CreateList<TPayeeModel>;
+end;
 
-//function TTransmitterModel.ToString: string;
-//var
-//  s: TStringBuilder;
-//begin
-//  s := TStringBuilder.Create;
-//  try
-//    s.Append(RecordType);
-//    s.Append(PaymentYear);
-//    s.Append(PriorYearDataIndicator);
-//    s.Append(TrasmitterControlCode);
-//    s.Append(Blank1);
-//    s.Append(TestFileIndicator);
-//    s.Append(ForeignEntityIndicator);
-//    s.Append(TransmitterName1);
-//    s.Append(TransmitterName2);
-//    s.Append(CompanyName1);
-//    s.Append(CompanyName2);
-//    s.Append(CompanyMailingAddress);
-//    s.Append(CompanyCity);
-//    s.Append(CompanyState);
-//    s.Append(CompanyZipCode);
-//    s.Append(Blank2);
-//    s.Append(TotalNumberOfPayees);
-//    s.Append(ContactName);
-//    s.Append(ContactTelNumber);
-//    s.Append(ContactEmailAddress);
-//    s.Append(Blank3);
-//    s.Append(RecordSequenceNumber);
-//    s.Append(Blank4);
-//    s.Append(VendorIndicator);
-//    s.Append(VendorName);
-//    s.Append(VendorMailingAddress);
-//    s.Append(VendorCity);
-//    s.Append(VendorState);
-//    s.Append(VendorZipCode);
-//    s.Append(VendorContactName);
-//    s.Append(VendorTelExt);
-//    s.Append(Blank5);
-//    s.Append(VendorForeignEntityIndicator);
-//    s.Append(Blank6);
-//    s.Append(Blank7);
-//    Result := s.ToString();
-//  finally
-//    s.Free;
-//  end;
-//end;
+{ TSimpleDocument }
 
-{ T1099DocumentModel }
+procedure TSimpleDocument.CreateLists;
+begin
+  People := TCollections.CreateList<TPersonModel>;
+  People.Add(TPersonModel.Create);
+end;
 
 end.

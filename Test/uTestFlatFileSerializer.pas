@@ -82,6 +82,7 @@ var
   serializer: TFlatFileSerializer<TSimpleDocument>;
   stringStream: TStringStream;
   outputDocument: TSimpleDocument;
+  peeps: TArray<TPersonModel>;
 begin
   serializer := TFlatFileSerializer<TSimpleDocument>.Create;
   try
@@ -91,6 +92,7 @@ begin
       outputDocument := TSimpleDocument.Create;
       try
         serializer.Deserialize(stringStream, outputDocument);
+        peeps := outputDocument.People.ToArray;
         Assert.IsNotNull(outputDocument.Header);
         Assert.IsNotNull(outputDocument.ControlRecord);
         with outputDocument do
@@ -99,6 +101,8 @@ begin
           Assert.AreEqual('X1', Header.SomeCode);
           Assert.AreEqual(EncodeDateTime(2021, 3, 15, 22, 15, 10, 0), Header.Timestamp);
           Assert.AreEqual('', Header.Blank);
+
+          Assert.AreEqual(3, People.Count);
 
           Assert.AreEqual(3, ControlRecord.TotalPeople);
           Assert.AreEqual('C', ControlRecord.Identifier);

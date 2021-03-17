@@ -36,6 +36,7 @@ contains
   uFlatFileAttributes in 'uFlatFileAttributes.pas',
   uFlatFileSerializer in 'uFlatFileSerializer.pas',
   uFlatFileDocument in 'uFlatFileDocument.pas',
-  uFlatFileExceptions in 'uFlatFileExceptions.pas';
+  uFlatFileExceptions in 'uFlatFileExceptions.pas',
+  uFlatFileModelPropertyRecord in 'uFlatFileModelPropertyRecord.pas';
 
 end.

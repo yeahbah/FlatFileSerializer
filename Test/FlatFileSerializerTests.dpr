@@ -19,7 +19,8 @@ uses
   uTestFlatFileSerializer in 'uTestFlatFileSerializer.pas',
   uFlatFileDocument in '..\uFlatFileDocument.pas',
   uFlatFileSerializer in '..\uFlatFileSerializer.pas',
-  uFlatFileExceptions in '..\uFlatFileExceptions.pas';
+  uFlatFileExceptions in '..\uFlatFileExceptions.pas',
+  uFlatFileModelPropertyRecord in '..\uFlatFileModelPropertyRecord.pas';
 
 var
   runner : ITestRunner;
