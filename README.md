@@ -17,4 +17,11 @@
     property ControlRecord: TControlRecord read fControlRecord write fControlRecord;
 
   end;
+  
+  serializer := TFlatFileSerializer<TSimpleDocument>.Create;
+  serializer.Serialize(stringStreamm, simpleDocument);
+  stringStream.SaveToFile('flatfile.txt');
+  
+  stringStream.LoadFromFile('flatfile.txt');
+  serializer.Deserialize(stringStream, simpleDocument);
 ```
