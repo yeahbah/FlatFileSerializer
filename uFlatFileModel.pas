@@ -22,9 +22,6 @@ implementation
 uses
   System.Generics.Defaults, SysUtils, DateUtils, uFlatFileExceptions, uFlatFileModelPropertyRecord;
 
-var
-  modelPropertyListCache: TDictionary<TFlatFileModelBase, IList<TFlatFileModelPropertyRecord>>;
-
 { TFlatFileModelBase }
 
 function TFlatFileModelBase.GetTotalSize: integer;

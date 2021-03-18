@@ -285,7 +285,6 @@ end;
 procedure TSimpleDocument.CreateLists;
 begin
   People := TCollections.CreateList<TPersonModel>;
-  People.Add(TPersonModel.Create);
 end;
 
 end.

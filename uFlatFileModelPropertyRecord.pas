@@ -22,7 +22,7 @@ type
 implementation
 
 uses
-  uFlatFileExceptions, SysUtils, Generics.Defaults;
+  uFlatFileExceptions, SysUtils, Generics.Defaults, Generics.Collections;
 
 { TFlatFileModelProperty }
 

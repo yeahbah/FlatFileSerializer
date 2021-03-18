@@ -29,10 +29,13 @@ type
   public
     procedure Serialize(aOutputStream: TStringStream; aFlatFileDocument: T);
     procedure Deserialize(aInputStream: TStringStream; out aResult: T);
-    class function GetSubTypeItemFromList(aList: IList): TClass;
+    class function GetSubTypeItemFromList(aQualifiedListName: string): string;
   end;
 
 implementation
+
+uses
+  RegularExpressions;
 
 { TPropertyMap }
 
@@ -70,15 +73,17 @@ var
   m: TRttiMethod;
   obj: IList<TFlatFileModelBase>;
   itemIndex: integer;
+  objectList: TObjectList<TFlatFileModelBase>;
 begin
   properties := GetPropertyMap(aResult);
   lines := TStringList.Create;
+  objectList := TObjectList<TFlatFileModelBase>.Create;
   try
     aInputStream.Position := 0;
     lines.LoadFromStream(aInputStream);
     ctx := TRttiContext.Create;
 
-    // O(N + M)
+    // O(N + M ) or maybe O(N^3), so much loops
     for line in lines do
     begin
       processed := false;
@@ -90,9 +95,10 @@ begin
         // a list item
         if prop.RecordAttribute is TFlatFileRecordListAttribute then
         begin
-          propType := ctx.GetType(prop.ModelInstance.ClassInfo);
-          listItemPointer := propType.GetMethod('Create').Invoke(propType.AsInstance.MetaClassType, []).AsPointer;
 
+          propType := ctx.FindType(GetSubTypeItemFromList(prop.RecordProperty.PropertyType.QualifiedName));
+          listItemPointer := propType.GetMethod('Create').Invoke(propType.AsInstance.MetaClassType, []).AsPointer;
+          objectList.Add(listItemPointer);
           props := TFlatFileModelPropertyRecord.GetModelPropertyList(listItemPointer);
 
           currentIndex := 0;
@@ -113,6 +119,10 @@ begin
                 // read the line into that object
                 // move on to the next line
                 obj := IList<TFlatFileModelBase>(prop.RecordProperty.GetValue(Pointer(aResult)).AsPointer);
+
+                propType := ctx.FindType(GetSubTypeItemFromList(prop.RecordProperty.PropertyType.QualifiedName));
+                listItemPointer := propType.GetMethod('Create').Invoke(propType.AsInstance.MetaClassType, []).AsPointer;
+
                 itemIndex := obj.Add(listItemPointer);
                 obj[itemIndex].SetFromString(line);
                 processed := true;
@@ -157,6 +167,7 @@ begin
     end;
   finally
     lines.Free;
+    objectList.Free;
   end;
 
 end;
@@ -175,6 +186,7 @@ var
   obj: Pointer;
   flatFileModelList: IList<TFlatFileModelPropertyRecord>;
   x: TRttiType;
+  s: string;
 begin
   ctx := TRttiContext.Create;
   objectType := ctx.GetType(T);
@@ -189,6 +201,7 @@ begin
 
       if prop.PropertyType.QualifiedName.Contains('IList') then
       begin
+        s := prop.PropertyType.QualifiedName;
         // expand the list
         obj := prop.GetValue(Pointer(aFlatFileDocument)).AsPointer;
         if obj = nil then
@@ -196,8 +209,7 @@ begin
           // create the list
           objectType.GetMethod('CreateLists').Invoke(aFlatFileDocument, []);
           obj := prop.GetValue(Pointer(aFlatFileDocument)).AsPointer;
-          attrList.Add(TPropertyMap.Create(IList<TFlatFileModelBase>(obj)[0], TFlatFileRecordListAttribute(attr), prop, nil));
-          IList<TFlatFileModelBase>(obj).Delete(0);
+          attrList.Add(TPropertyMap.Create(nil, TFlatFileRecordListAttribute(attr), prop, nil));
         end;
 
         recordList := IList<TFlatFileModelBase>(obj);
@@ -235,29 +247,17 @@ begin
 end;
 
 class function TFlatFileSerializer<T>.GetSubTypeItemFromList(
-  aList: IList): TClass;
+  aQualifiedListName: string): string;
 var
-  ctxRtti  : TRttiContext;
-  typeRtti : TRttiType;
-  atrbRtti : TCustomAttribute;
-  methodRtti: TRttiMethod;
-  parameterRtti: TRttiParameter;
+  regEx: TRegEx;
+  matchCollections: TMatchCollection;
 begin
-  result := nil;
+  regEx := TRegEx.Create('.+\.(.+\<(.+)\>)');
+  matchCollections := regEx.Matches(aQualifiedListName);
+  if matchCollections.Count = 0 then
+    raise Exception.Create('Unable to determine list type');
 
-  ctxRtti  := TRttiContext.Create;
-  typeRtti := ctxRtti.GetType( TObject(aList).ClassInfo );
-  methodRtti := typeRtti.GetMethod('Add');
-  for parameterRtti in methodRtti.GetParameters do
-  begin
-    if SameText(parameterRtti.Name,'Value') then
-    begin
-      if parameterRtti.ParamType.IsInstance then
-        result := parameterRtti.ParamType.AsInstance.MetaclassType;
-      break;
-    end;
-  end;
-  ctxRtti.Free;
+  result := matchCollections[0].Groups[2].Value;
 
 end;
 
