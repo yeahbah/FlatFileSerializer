@@ -1,23 +1,20 @@
 # Boomer Tech FlatFileSerializer
 
 ```delphi
-  TTestModel = class(TFlatFileModelBase)
+    TSimpleDocument = class(TFlatFileDocumentBase)
   private
-    fSomeNumber: integer;
-    fName: string;
-    fSalary: currency;
-    fBirthDate: TDate;
+    fPeople: IList<TPersonModel>;
+    fHeader: THeaderModel;
+    fControlRecord: TControlRecord;
   public
-    [TFlatFileItem(2, 3, 'x', true)]
-    property SomeNumber: integer read fSomeNumber write fSomeNumber;
+    [TFlatFileRecord(1)]
+    property Header: THeaderModel read fHeader write fHeader;
 
-    [TFlatFileItem(1, 40)]
-    property Name: string read fName write fName;
+    [TFlatFileRecordListAttribute(2)]
+    property People: IList<TPersonModel> read fPeople write fPeople;
 
-    [TFlatFileItem(3, 10, '0', true)]
-    property Salary: currency read fSalary write fSalary;
+    [TFlatFileRecord(3)]
+    property ControlRecord: TControlRecord read fControlRecord write fControlRecord;
 
-    [TFlatFileItem(4, 8)]
-    property BirthDate: TDate read fBirthDate write fBirthDate;
   end;
 ```
