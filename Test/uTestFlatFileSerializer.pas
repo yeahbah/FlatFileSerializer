@@ -103,6 +103,29 @@ begin
           Assert.AreEqual('', Header.Blank);
 
           Assert.AreEqual(3, People.Count);
+          with People[0] do
+          begin
+            Assert.AreEqual('LOYD CHRISTMAS', Name);
+            Assert.AreEqual(22, SomeNumber);
+            Assert.AreEqual(EncodeDate(1985, 12, 25), BirthDate);
+            Assert.IsTrue(2.99 = Salary);
+          end;
+
+          with People[1] do
+          begin
+            Assert.AreEqual('HARRY DUNNE', Name);
+            Assert.AreEqual(23, SomeNumber);
+            Assert.AreEqual(EncodeDate(1984, 12, 26), BirthDate);
+            Assert.IsTrue(101010.99 = Salary);
+          end;
+
+          with People[2] do
+          begin
+            Assert.AreEqual('MARY SAMSONITE', Name);
+            Assert.AreEqual(24, SomeNumber);
+            Assert.AreEqual(EncodeDate(1982, 10, 10), BirthDate);
+            Assert.IsTrue(1010101 = Salary);
+          end;
 
           Assert.AreEqual(3, ControlRecord.TotalPeople);
           Assert.AreEqual('C', ControlRecord.Identifier);

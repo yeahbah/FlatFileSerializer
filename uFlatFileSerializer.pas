@@ -26,9 +26,11 @@ type
   TFlatFileSerializer<T: TFlatFileDocumentBase> = class
   private
     function GetPropertyMap(aFlatFileDocument: T): IList<TPropertyMap>;
+    function ProcessDocumentLine(aLine: string; aPropertyMap: TPropertyMap): boolean; overload;
+    function ProcessDocumentLine(aLine: string; aPropertyMap: TPropertyMap; aFlatFileDocument: T): boolean; overload;
   public
     procedure Serialize(aOutputStream: TStringStream; aFlatFileDocument: T);
-    procedure Deserialize(aInputStream: TStringStream; out aResult: T);
+    procedure Deserialize(aInputStream: TStringStream; out aFlatFileDocument: T);
     class function GetSubTypeItemFromList(aQualifiedListName: string): string;
   end;
 
@@ -52,122 +54,46 @@ end;
 { TFlatFileSerizalier<T> }
 
 procedure TFlatFileSerializer<T>.Deserialize(aInputStream: TStringStream;
-  out aResult: T);
+  out aFlatFileDocument: T);
 var
   lines: TStringList;
   line: string;
   properties: IList<TPropertyMap>;
   prop: TPropertyMap;
   value: string;
-  ctx: TRttiContext;
-  propType: TRttiType;
-  p: TRttiProperty;
-  attr: TCustomAttribute;
-  currentIndex: integer;
-  modelProperty: TFlatFileModelPropertyRecord;
-  identifier: string;
   processed: boolean;
-  listItem: TValue;
-  listItemPointer: Pointer;
-  props: IList<TFlatFileModelPropertyRecord>;
-  m: TRttiMethod;
-  obj: IList<TFlatFileModelBase>;
-  itemIndex: integer;
-  objectList: TObjectList<TFlatFileModelBase>;
+
 begin
-  properties := GetPropertyMap(aResult);
+  properties := GetPropertyMap(aFlatFileDocument);
   lines := TStringList.Create;
-  objectList := TObjectList<TFlatFileModelBase>.Create;
   try
     aInputStream.Position := 0;
     lines.LoadFromStream(aInputStream);
-    ctx := TRttiContext.Create;
 
-    // O(N + M ) or maybe O(N^3), so much loops
+    // O(N * M * L ) or maybe O(N^3), so much loops
     for line in lines do
     begin
       processed := false;
       for prop in properties do
       begin
-        if processed then
-          break;
 
         // a list item
         if prop.RecordAttribute is TFlatFileRecordListAttribute then
         begin
-
-          propType := ctx.FindType(GetSubTypeItemFromList(prop.RecordProperty.PropertyType.QualifiedName));
-          listItemPointer := propType.GetMethod('Create').Invoke(propType.AsInstance.MetaClassType, []).AsPointer;
-          objectList.Add(listItemPointer);
-          props := TFlatFileModelPropertyRecord.GetModelPropertyList(listItemPointer);
-
-          currentIndex := 0;
-          for modelProperty in props do
-          begin
-            if modelProperty.FlatFileItemAttribute.RecordIdentifier <> string.Empty then
-            begin
-              // problem here is that it can read any random value in the line and can
-              // match the identifier. I blame the guy who designed the flat file structure if this fail.
-              identifier := line
-                .Substring(currentIndex, modelProperty.FlatFileItemAttribute.Size)
-                .Trim();
-
-              // this is case sensitive matching
-              if string.Compare(identifier, modelProperty.FlatFileItemAttribute.RecordIdentifier) = 0 then
-              begin
-                // create the necessary object
-                // read the line into that object
-                // move on to the next line
-                obj := IList<TFlatFileModelBase>(prop.RecordProperty.GetValue(Pointer(aResult)).AsPointer);
-
-                propType := ctx.FindType(GetSubTypeItemFromList(prop.RecordProperty.PropertyType.QualifiedName));
-                listItemPointer := propType.GetMethod('Create').Invoke(propType.AsInstance.MetaClassType, []).AsPointer;
-
-                itemIndex := obj.Add(listItemPointer);
-                obj[itemIndex].SetFromString(line);
-                processed := true;
-                break;
-              end;
-            end;
-            currentIndex := currentIndex + modelProperty.FlatFileItemAttribute.Size;
-          end;
-
+          processed := ProcessDocumentLine(line, prop, aFlatFileDocument);
         end
         else
         begin
-
-          currentIndex := 0;
-          for modelProperty in prop.ModelProperties do
-          begin
-            if modelProperty.FlatFileItemAttribute.RecordIdentifier <> string.Empty then
-            begin
-              // problem here is that it can read any random value in the line and can
-              // match the identifier. I blame the guy who designed the flat file structure if this fail.
-              identifier := line
-                .Substring(currentIndex, modelProperty.FlatFileItemAttribute.Size)
-                .Trim();
-
-              // this is case sensitive matching
-              if string.Compare(identifier, modelProperty.FlatFileItemAttribute.RecordIdentifier) = 0 then
-              begin
-                // create the necessary object
-                // read the line into that object
-                // move on to the next line
-                prop.ModelInstance.SetFromString(line);
-                processed := true;
-                break;
-              end;
-            end;
-            currentIndex := currentIndex + modelProperty.FlatFileItemAttribute.Size;
-          end;
+          processed := ProcessDocumentLine(line, prop);
         end;
 
+        if processed then
+          break;
       end;
 
     end;
   finally
     lines.Free;
-    objectList.Free;
   end;
 
 end;
@@ -259,6 +185,93 @@ begin
 
   result := matchCollections[0].Groups[2].Value;
 
+end;
+
+function TFlatFileSerializer<T>.ProcessDocumentLine(aLine: string;
+  aPropertyMap: TPropertyMap; aFlatFileDocument: T): boolean;
+var
+  propType: TRttiType;
+  ctx: TRttiContext;
+  listItemPointer: Pointer;
+  props: IList<TFlatFileModelPropertyRecord>;
+  currentIndex: integer;
+  modelProperty: TFlatFileModelPropertyRecord;
+  identifier: string;
+  listObject: IList<TFlatFileModelBase>;
+  itemIndex: integer;
+begin
+  result := false;
+  ctx := TRttiContext.Create;
+  propType := ctx.FindType(GetSubTypeItemFromList(aPropertyMap.RecordProperty.PropertyType.QualifiedName));
+  listItemPointer := propType.GetMethod('Create').Invoke(propType.AsInstance.MetaClassType, []).AsPointer;
+  try
+    props := TFlatFileModelPropertyRecord.GetModelPropertyList(listItemPointer);
+  finally
+    TFlatFileModelBase(listItemPointer).Free;
+  end;
+
+  currentIndex := 0;
+  for modelProperty in props do
+  begin
+    if modelProperty.FlatFileItemAttribute.RecordIdentifier <> string.Empty then
+    begin
+      // problem here is that it can read any random value in the line and can
+      // match the identifier. I blame the guy who designed the flat file structure if this fail.
+      identifier := aLine
+        .Substring(currentIndex, modelProperty.FlatFileItemAttribute.Size)
+        .Trim();
+
+      // this is case sensitive matching
+      if string.Compare(identifier, modelProperty.FlatFileItemAttribute.RecordIdentifier) = 0 then
+      begin
+        // create the necessary object
+        // read the line into that object
+        // move on to the next line
+        listObject := IList<TFlatFileModelBase>(aPropertyMap.RecordProperty.GetValue(Pointer(aFlatFileDocument)).AsPointer);
+
+        propType := ctx.FindType(GetSubTypeItemFromList(aPropertyMap.RecordProperty.PropertyType.QualifiedName));
+        listItemPointer := propType.GetMethod('Create').Invoke(propType.AsInstance.MetaClassType, []).AsPointer;
+
+        itemIndex := listObject.Add(listItemPointer);
+        listObject[itemIndex].SetFromString(aLine);
+        Exit(true);
+      end;
+    end;
+    currentIndex := currentIndex + modelProperty.FlatFileItemAttribute.Size;
+  end;
+end;
+
+function TFlatFileSerializer<T>.ProcessDocumentLine(aLine: string;
+  aPropertyMap: TPropertyMap): boolean;
+var
+  currentIndex: integer;
+  modelProperty: TFlatFileModelPropertyRecord;
+  identifier: string;
+begin
+  result := false;
+  currentIndex := 0;
+  for modelProperty in aPropertyMap.ModelProperties do
+  begin
+    if modelProperty.FlatFileItemAttribute.RecordIdentifier <> string.Empty then
+    begin
+      // problem here is that it can read any random value in the line and can
+      // match the identifier. I blame the guy who designed the flat file structure if this fail.
+      identifier := aLine
+        .Substring(currentIndex, modelProperty.FlatFileItemAttribute.Size)
+        .Trim();
+
+      // this is case sensitive matching
+      if string.Compare(identifier, modelProperty.FlatFileItemAttribute.RecordIdentifier) = 0 then
+      begin
+        // create the necessary object
+        // read the line into that object
+        // move on to the next line
+        aPropertyMap.ModelInstance.SetFromString(aLine);
+        Exit(true);
+      end;
+    end;
+    currentIndex := currentIndex + modelProperty.FlatFileItemAttribute.Size;
+  end;
 end;
 
 procedure TFlatFileSerializer<T>.Serialize(aOutputStream: TStringStream;
