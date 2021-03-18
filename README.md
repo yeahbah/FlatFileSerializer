@@ -1,7 +1,7 @@
 # Boomer Tech FlatFileSerializer
 
 ```delphi
-    TSimpleDocument = class(TFlatFileDocumentBase)
+  TSimpleDocument = class(TFlatFileDocumentBase)
   private
     fPeople: IList<TPersonModel>;
     fHeader: THeaderModel;
